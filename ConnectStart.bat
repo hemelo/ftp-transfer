@@ -1,0 +1,1 @@
+"C:\Program Files\Java\jdk-17\bin\java.exe" -jar connect-jar-with-dependencies.jar com.hemelo.connect.Main -Dlog4j2.configurationFile=file:src/main/resources/log4j2.properties
