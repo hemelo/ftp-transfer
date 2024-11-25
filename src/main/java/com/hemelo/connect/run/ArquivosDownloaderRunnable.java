@@ -43,19 +43,20 @@ public class ArquivosDownloaderRunnable implements Runnable {
     private TransitoDao transitoDao;
 
     private boolean deveExecutar() {
-        LocalTime ultimoDownload;
-
-        if (MainAux.ultimoDownloadArquivosInstant != null) {
-            ultimoDownload = LocalTime.ofInstant(MainAux.ultimoDownloadArquivosInstant, Dates.ZONE_ID);
-        } else {
-            ultimoDownload = LocalTime.of(0, 0);
-        }
 
         LocalTime now = LocalTime.now(Dates.ZONE_ID);
 
+        if (MainAux.ultimoDownloadArquivosInstant != null) {
+            LocalTime  ultimoDownload = LocalTime.ofInstant(MainAux.ultimoDownloadArquivosInstant, Dates.ZONE_ID);
+            long diff = Duration.between(ultimoDownload, now).toMinutes();
+
+            if (diff < Timings.INTERVALO_MINIMO_ENTRE_DOWNLOADS_MINUTOS) {
+                return false;
+            }
+        }
+
         // Verifica se pode
-        return (Timings.HORARIOS_DOWNLOAD_ARQUIVOS_FTP.stream().anyMatch(h -> h.getHour() == now.getHour() &&
-                h.getMinute() == now.getMinute() && h.getHour() != ultimoDownload.getHour() && h.getMinute() != ultimoDownload.getMinute()));
+        return (Timings.HORARIOS_DOWNLOAD_ARQUIVOS_FTP.stream().anyMatch(h -> h.getHour() == now.getHour() && h.getMinute() == now.getMinute()));
     }
 
     @Override

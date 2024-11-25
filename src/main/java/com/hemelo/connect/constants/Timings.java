@@ -61,4 +61,7 @@ public class Timings {
 
     // Define o tempo utilizado para tentar novamente abrir Stream de IO no socket
     public static final long TEMPO_MAXIMO_RELATORIO = Duration.ofMinutes(5).toMillis();
+
+    // Define o tempo mínimo entre downloads
+    public static final long INTERVALO_MINIMO_ENTRE_DOWNLOADS_MINUTOS =  Duration.ofMinutes(Main.isProductionEnvironment ? 5 : 1).toMinutes();
 }

@@ -103,13 +103,13 @@ public class Mailer {
             if (destinatarios == null || destinatarios.isEmpty()) {
                 _destinatarios = Main.isProductionEnvironment
                         ? genericDao.buscarDestinatariosEmail(topic)
-                        : Arrays.asList(Objects.requireNonNullElse(properties.get().get("mail.testing.destinatarios"), "").toString().split(","));
+                        : Arrays.asList(Objects.requireNonNullElse(properties.get().get("mail.destinatarios.seds"), "").toString().split(","));
             } else {
                 _destinatarios = destinatarios;
             }
 
             if (_destinatarios == null || _destinatarios.isEmpty()) {
-                logger.error("Não foi possível enviar o email, pois não há destinatários cadastrados para o topic " + topic);
+                logger.error("Não foi possível enviar o email, pois não há destinatários cadastrados para o topic " + topic.getSubscriptionTopic());
 
                 synchronized (isSendingMail) {
                     isSendingMail.set(false);
@@ -119,14 +119,14 @@ public class Mailer {
                 return;
             }
 
-            String _body = body.replaceAll("\n", "<br>");
+            String _body = body.replaceAll("\n", "<br>").replaceAll("\\\\", "/");
 
             try {
                 MultiPartEmail  email = getEmailBase();
 
                 email.setSubject(topic.toString());
                 email.setContent(StringEscapeUtils.unescapeJava(_body), "text/html; charset=UTF-8");
-                email.addTo(destinatarios.toArray(new String[0]));
+                email.addTo(_destinatarios.toArray(new String[0]));
 
                 if (anexos != null && !anexos.isEmpty()) {
                     for (File anexo : anexos) {
