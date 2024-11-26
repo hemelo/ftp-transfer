@@ -626,7 +626,7 @@ public abstract class MainAux {
         try {
 
             // Thread para aguardar os processos sincronizados
-            ProcessaUtils.createAndJoinThread("Hourly Sync Wait", () -> {
+            ProcessaUtils.createThread("Hourly Sync Wait", () -> {
 
                 synchronized (Datasource.isConnectingDatasource) {
                     while (Datasource.isConnectingDatasource.get()) {
