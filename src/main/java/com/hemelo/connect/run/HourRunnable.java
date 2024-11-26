@@ -56,9 +56,11 @@ public class HourRunnable implements Runnable {
         StringBuilder sb = MainAux.getRelatorioSistema();
 
         String path = MainAux.getCaminhoLogAplicacao();
+        FileUtils.createDirectoryIfNotExists(path);
+
         File folder = new File(path);
-        String nomeZip = "logs-para-email-" + Dates.BRAZILIAN_DATE_FORMATTER.format(LocalDateTime.now(Dates.ZONE_ID));
-        String arquivoZip = path + File.separator + nomeZip + ".zip";
+
+        String nomeZip = "logs-para-email-" + Dates.UNIVERSAL_DATETIME_FORMATTER.format(LocalDateTime.now(Dates.ZONE_ID));String arquivoZip = path + File.separator + nomeZip + ".zip";
 
         if (StringUtils.isBlank(path) || !folder.exists()) {
             sb.append("❌ Não foi possível encontrar o diretório de logs diários").append(System.lineSeparator());

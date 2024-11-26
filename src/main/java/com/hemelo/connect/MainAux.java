@@ -287,7 +287,7 @@ public abstract class MainAux {
     public static String getCaminhoLogAplicacao() {
         Optional<Properties> props = PropertiesUtils.getProperties("log4j2.properties");
 
-        if (!props.isPresent())
+        if (props.isPresent())
             return props.get().getProperty("property.basePath");
 
         return null;
@@ -296,7 +296,7 @@ public abstract class MainAux {
     public static String getCaminhoLogAplicacaoCompleto() {
         Optional<Properties> props = PropertiesUtils.getProperties("log4j2.properties");
 
-        if (!props.isPresent()) {
+        if (props.isPresent()) {
             String fileName = props.get().getProperty("property.fileName");
             fileName = fileName.substring(fileName.lastIndexOf(File.separator) + 1);
             return props.get().getProperty("property.basePath") + File.separator + fileName;
