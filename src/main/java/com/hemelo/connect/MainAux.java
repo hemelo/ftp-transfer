@@ -10,6 +10,7 @@ import com.hemelo.connect.enums.FileStatusLocal;
 import com.hemelo.connect.enums.FileStatusRemoto;
 import com.hemelo.connect.exception.ConexaoException;
 import com.hemelo.connect.infra.Datasource;
+import com.hemelo.connect.infra.FTPClient;
 import com.hemelo.connect.utils.DateUtils;
 import com.hemelo.connect.utils.FileUtils;
 import com.hemelo.connect.utils.ProcessaUtils;
@@ -26,6 +27,8 @@ import java.lang.management.ManagementFactory;
 import java.lang.management.RuntimeMXBean;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.time.*;
 import java.util.*;
 import java.util.Timer;
@@ -604,6 +607,7 @@ public abstract class MainAux {
 
     public static StringBuilder getRelatorioSistema() {
         Duration uptime = null;
+        Duration diffTempo = null;
 
         try {
             RuntimeMXBean runtimeMXBean = ManagementFactory.getRuntimeMXBean();
@@ -614,11 +618,27 @@ public abstract class MainAux {
 
         StringBuilder sb = new StringBuilder();
         sb.append(DateUtils.getCumprimento()).append(System.lineSeparator()).append(System.lineSeparator());
-        sb.append("📝 Segue relatório detalhado do sistema").append(System.lineSeparator());
+        sb.append("📝 Segue relatório detalhado do sistema").append(System.lineSeparator()).append(System.lineSeparator());
+
         sb.append("📅 Horário: ").append(Dates.BRAZILIAN_DATE_TIME_FORMATTER.format(LocalDateTime.now(Dates.ZONE_ID))).append(System.lineSeparator());
 
         if (uptime != null) {
             sb.append("⏱️ Tempo de execução: ").append(uptime.toHoursPart()).append(" horas e ").append(uptime.toMinutesPart()).append(" minutos").append(System.lineSeparator());
+        }
+
+        if (ultimoEnvioArquivosInstant != null) {
+            diffTempo = Duration.between(ultimoEnvioArquivosInstant, Instant.now());
+            sb.append("⏱️ Último envio de arquivos: ").append(diffTempo.toHoursPart()).append(" horas e ").append(diffTempo.toMinutesPart()).append(" minutos atrás").append(System.lineSeparator());
+        }
+
+        if (ultimoDownloadArquivosInstant != null) {
+            diffTempo = Duration.between(ultimoDownloadArquivosInstant, Instant.now());
+            sb.append("⏱️ Último download de arquivos: ").append(diffTempo.toHoursPart()).append(" horas e ").append(diffTempo.toMinutesPart()).append(" minutos atrás").append(System.lineSeparator());
+        }
+
+        if (ultimaBuscaArquivosInstant != null) {
+            diffTempo = Duration.between(ultimaBuscaArquivosInstant, Instant.now());
+            sb.append("⏱️ Última busca de arquivos: ").append(diffTempo.toHoursPart()).append(" horas e ").append(diffTempo.toMinutesPart()).append(" minutos atrás").append(System.lineSeparator());
         }
 
         sb.append(System.lineSeparator());
@@ -759,6 +779,9 @@ public abstract class MainAux {
             sb.append(System.lineSeparator());
         }
 
+        sb.append("Status do FTP: ").append(MainAux.getStatusFTP() ? "Conectado ✅" : "Desconectado ❌").append(System.lineSeparator());
+        sb.append("Status de Conexão com Banco de Dados: ").append(MainAux.getStatusDatabase() ? "Conectado ✅" : "Desconectado ❌").append(System.lineSeparator()).append(System.lineSeparator());
+
         try {
             sb.append("📊 Total Arquivos Lista Global:").append(arquivosParaEnviar.size()).append(System.lineSeparator()).append(System.lineSeparator());
 
@@ -778,5 +801,48 @@ public abstract class MainAux {
 
 
         return sb;
+    }
+
+    private static Boolean getStatusFTP() {
+
+        try {
+            if (FTPClient.getInstance() == null || !FTPClient.getInstance().isConnected()) {
+                return false;
+            }
+        } catch (Exception e) {
+            return false;
+        }
+
+        return true;
+    }
+
+    private static Boolean getStatusDatabase() {
+
+        AtomicBoolean status = new AtomicBoolean(true);
+
+        try {
+            ProcessaUtils.createThread("Status DB", () -> {
+                Connection connection = MainAux.getDatasource().getConnection();
+
+                try {
+                    if (connection == null || connection.isClosed()) {
+                        status.set(false);
+                    }
+                } catch (SQLException e) {
+                    status.set(false);
+                } finally {
+                    if (connection != null) {
+                        try {
+                            connection.close();
+                        } catch (SQLException e) {}
+                    }
+                }
+
+            }).join(Timings.TEMPO_LIMITE_CONEXAO_STATUS_DB);
+
+            return status.get();
+        } catch (InterruptedException e) {
+            return false;
+        }
     }
 }

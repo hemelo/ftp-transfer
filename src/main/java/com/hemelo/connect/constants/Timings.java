@@ -64,4 +64,7 @@ public class Timings {
 
     // Define o tempo mínimo entre downloads
     public static final long INTERVALO_MINIMO_ENTRE_DOWNLOADS_MINUTOS =  Duration.ofMinutes(Main.isProductionEnvironment ? 5 : 1).toMinutes();
+
+    // Define o tempo limite para conexão com o banco de dados para validar status
+    public static final long TEMPO_LIMITE_CONEXAO_STATUS_DB = Duration.ofSeconds(30).toMillis();
 }
